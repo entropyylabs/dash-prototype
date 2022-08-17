@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap");
+
+* {
+  font-family: "DM Sans", sans-serif;
+}
+
+.btn {
+  display: inline-block;
+  min-width: 180px;
+  color: #000;
+  text-align: center;
+  text-decoration: none;
+  positon: relative;
+  margin-bottom: 30px;
+  border: 2px solid #000;
+  border-radius: 15px;
+}
+
+.btn.shadow {
+  box-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000;
+}
+
+.btn.shadow:hover {
+  margin-top: 1px;
+  box-shadow: 1px 1px 0 #000, 2px 2px 0 #000;
+  margin-top: 2px;
+  margin-left: 2px;
+}
+
+.btn.shadow:active {
+  margin-top: 4px;
+  margin-left: 4px;
+}
+
+.btn:active {
+  margin-top: 4px;
+  border: none;
+  box-shadow: none;
+}
+
+.btn.yellow {
+  background-color: #f3f278;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+/* React flow styles */
+.react-flow__node,
+.react-flow__node.selectable.selected {
+  box-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000 !important;
+}
+
+.react-flow__node-selectorNode,
+.react-flow__node-utilityNode {
+  font-size: 12px;
+  border: 1px solid #555;
+  border-radius: 3px;
+  text-align: center;
+  width: 150px;
+}
+
+select {
+  background: transparent;
+  width: 100px;
+}
+
+.button-holder {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+#__next {
+  background: #f1efea;
+}

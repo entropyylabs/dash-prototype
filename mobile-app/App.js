@@ -14,6 +14,7 @@ import Spin from "./Screens/Spin";
 import SpinTheWheel from "./Screens/SpinTheWheel";
 import Transferring from "./Screens/Transferring";
 import Utilise from "./Screens/Utilise";
+import Login from "./Screens/Login";
 
 import "./ignoreWarning";
 const Stack = createNativeStackNavigator();
@@ -23,6 +24,11 @@ function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="SplashScreen">
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="Mint"
           component={MintScreen}

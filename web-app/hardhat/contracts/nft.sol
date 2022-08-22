@@ -1,129 +1,68 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
-contract UtilityNFTs is ERC721Enumerable, Ownable {
-    /**
-     * @dev _baseTokenURI for computing {tokenURI}. If set, the resulting URI for each
-     * token will be the concatenation of the `baseURI` and the `tokenId`.
-     */
-    string _baseTokenURI;
+contract NFT is ERC721, VRFConsumerBase {
+    uint256 public tokenCounter;
+    enum Rarity {COMMON, RARE, SUPER_RARE}
+    mapping(bytes32 => address) public requestIdToSender;
+    mapping(bytes32 => string) public requestIdToTokenURI;
+    mapping(uint256 => Rarity) public tokenIdToRarity;
+    mapping(bytes32 => uint256) public requestIdToTokenId;
+    event requestedCollectible(bytes32 indexed requestId);
 
-    //  _price is the price of one Crypto Dev NFT
-    uint256 public _price = 0.01 ether;
+    bytes32 internal keyHash;
+    uint256 internal fee;
 
-    // _paused is used to pause the contract in case of an emergency
-    bool public _paused;
+    mapping (uint256 => string) private _tokenURIs;
 
-    // max number of UtilityNFTs
-    uint256 public maxTokenIds = 20;
-
-    // total number of tokenIds minted
-    uint256 public tokenIds;
-
-    // Whitelist contract instance
-    IWhitelist whitelist;
-
-    // boolean to keep track of whether presale started or not
-    bool public presaleStarted;
-
-    // timestamp for when presale would end
-    uint256 public presaleEnded;
-
-    modifier onlyWhenNotPaused() {
-        require(!_paused, "Contract currently paused");
-        _;
-    }
-
-    /**
-     * @dev ERC721 constructor takes in a `name` and a `symbol` to the token collection.
-     * name in our case is `Crypto Devs` and symbol is `CD`.
-     * Constructor for Crypto Devs takes in the baseURI to set _baseTokenURI for the collection.
-     * It also initializes an instance of whitelist interface.
-     */
-    constructor(string memory baseURI, address whitelistContract)
-        ERC721("Crypto Devs", "CD")
+    constructor(
+        address _VRFCoordinator,
+        address _LinkToken,
+        bytes32 _keyhash
+    )
+        public
+        VRFConsumerBase(_VRFCoordinator, _LinkToken)
+        ERC721("ODYSSEY Tokens", "ODT")
     {
-        _baseTokenURI = baseURI;
-        whitelist = IWhitelist(whitelistContract);
+        tokenCounter = 0;
+        keyHash = _keyhash;
+        fee = 0.1 * 10**18;
     }
 
-    /**
-     * @dev startPresale starts a presale for the whitelisted addresses
-     */
-    function startPresale() public onlyOwner {
-        presaleStarted = true;
-        // Set presaleEnded time as current timestamp + 5 minutes
-        // Solidity has cool syntax for timestamps (seconds, minutes, hours, days, years)
-        presaleEnded = block.timestamp + 5 minutes;
+    function createCollectible(string memory tokenURI)
+        public
+        returns (bytes32)
+    {
+        bytes32 requestId = requestRandomness(keyHash, fee);
+        requestIdToSender[requestId] = msg.sender;
+        requestIdToTokenURI[requestId] = tokenURI;
+        emit requestedCollectible(requestId);
     }
 
-    /**
-     * @dev presaleMint allows a user to mint one NFT per transaction during the presale.
-     */
-    function presaleMint() public payable onlyWhenNotPaused {
+    function fulfillRandomness(bytes32 requestId, uint256 randomNumber)
+        internal
+        override
+    {
+        address NFTOwner = requestIdToSender[requestId];
+        string memory tokenURI = requestIdToTokenURI[requestId];
+        uint256 newItemId = tokenCounter;
+        _safeMint(NFTOwner, newItemId);
+        _tokenURIs[newItemId] = tokenURI;
+        Rarity nftRarity = Rarity(randomNumber % 3);
+        tokenIdToRarity[newItemId] = nftRarity;
+        requestIdToTokenId[requestId] = newItemId;
+        tokenCounter = tokenCounter + 1;
+    }
+
+    function setTokenURI(uint256 tokenId, string memory _tokenURI) public {
         require(
-            presaleStarted && block.timestamp < presaleEnded,
-            "Presale is not running"
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: transfer caller is not owner nor approved"
         );
-        require(
-            whitelist.whitelistedAddresses(msg.sender),
-            "You are not whitelisted"
-        );
-        require(tokenIds < maxTokenIds, "Exceeded maximum Crypto Devs supply");
-        require(msg.value >= _price, "Ether sent is not correct");
-        tokenIds += 1;
-        //_safeMint is a safer version of the _mint function as it ensures that
-        // if the address being minted to is a contract, then it knows how to deal with ERC721 tokens
-        // If the address being minted to is not a contract, it works the same way as _mint
-        _safeMint(msg.sender, tokenIds);
+         _tokenURIs[tokenId] = _tokenURI;
+        
     }
-
-    /**
-     * @dev mint allows a user to mint 1 NFT per transaction after the presale has ended.
-     */
-    function mint() public payable onlyWhenNotPaused {
-        require(
-            presaleStarted && block.timestamp >= presaleEnded,
-            "Presale has not ended yet"
-        );
-        require(tokenIds < maxTokenIds, "Exceed maximum Crypto Devs supply");
-        require(msg.value >= _price, "Ether sent is not correct");
-        tokenIds += 1;
-        _safeMint(msg.sender, tokenIds);
-    }
-
-    /**
-     * @dev _baseURI overides the Openzeppelin's ERC721 implementation which by default
-     * returned an empty string for the baseURI
-     */
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseTokenURI;
-    }
-
-    /**
-     * @dev setPaused makes the contract paused or unpaused
-     */
-    function setPaused(bool val) public onlyOwner {
-        _paused = val;
-    }
-
-    /**
-     * @dev withdraw sends all the ether in the contract
-     * to the owner of the contract
-     */
-    function withdraw() public onlyOwner {
-        address _owner = owner();
-        uint256 amount = address(this).balance;
-        (bool sent, ) = _owner.call{value: amount}("");
-        require(sent, "Failed to send Ether");
-    }
-
-    // Function to receive Ether. msg.data must be empty
-    receive() external payable {}
-
-    // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
 }

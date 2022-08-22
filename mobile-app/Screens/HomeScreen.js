@@ -42,7 +42,7 @@ const HomeScreen = ({ navigation }) => {
         />
         <TouchableOpacity
           title="Start Hunt in ARmode"
-          onPress={() => navigation.navigate("ArMode")}
+          onPress={() => navigation.navigate("Login")}
           style={Styles.huntButton}
         >
           <AntDesign name="right" size={24} color="black" />

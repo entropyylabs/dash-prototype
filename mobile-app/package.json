@@ -12,6 +12,7 @@
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.2.2",
     "@react-navigation/native-stack": "^6.7.0",
+    "0xsequence": "^0.40.5",
     "expo": "~45.0.0",
     "expo-app-loading": "~2.0.0",
     "expo-blur": "~11.1.0",
@@ -19,6 +20,7 @@
     "expo-file-system": "~14.0.0",
     "expo-location": "~14.2.2",
     "expo-updates": "~0.13.4",
+    "expo-web-browser": "~10.2.1",
     "lottie-react-native": "5.0.1",
     "react": "17.0.2",
     "react-dom": "17.0.2",

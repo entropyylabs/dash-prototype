@@ -1,4 +1,4 @@
-# Odyssey
+# Odyssey - Web3Infinity demo 
 
 Do you remember Pokemon Go? Odyssey is the same, but for Utility NFTs. It’s rare. It’s exclusive. If you find it, you are lucky.
 
